@@ -2,15 +2,42 @@
 
 import bz2
 import gzip
+import os
+import stat
 import sys
 import tarfile
+
+checked_paths = {}
+checked_perms = []
 
 def untar_nc (filename):
 	try:
 		tarball = tarfile.open(filename)
-		tarball.list()
+		contents = tarball.getmembers()
+		pre_check(contents)
 	except Exception as e:
 		sys.stderr.write(str(e) + "\n")
+
+def pre_check (contents):
+	for item in contents:
+		check_path(contents.name)
+		check_perms(item)
+
+def check_path (path):
+	if checked_paths.has_key(path):
+		return
+	parts = path.rsplit('/', 1)
+	if len(parts) != 1:
+		check_path(parts[1])
+	# Test this path
+	if os.access(path, os.F_OK):  # Does path exist
+		metadata = os.lstat(path)
+		checked_paths[path] = metadata
+	else:
+		checked_paths[path] = None
+
+def check_perms (item):
+	pass
 
 if __name__=='__main__':
 	untar_nc(*sys.argv[1:])
