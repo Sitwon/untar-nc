@@ -33,7 +33,7 @@ def check_path (path):
 	if os.access(path, os.F_OK):  # Does path exist
 		metadata = os.lstat(path)
 		checked_paths[path] = metadata
-		print path, stat.S_IMODE(metadata.st_mode)
+		print path, oct(stat.S_IMODE(metadata.st_mode))
 	else:
 		checked_paths[path] = None
 		print path, "does not exist"
