@@ -28,7 +28,7 @@ def check_path (path):
 		return
 	parts = path.rsplit('/', 1)
 	if len(parts) != 1:
-		check_path(parts[1])
+		check_path(parts[0])
 	# Test this path
 	if os.access(path, os.F_OK):  # Does path exist
 		metadata = os.lstat(path)
