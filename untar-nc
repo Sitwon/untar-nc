@@ -39,7 +39,10 @@ def check_path (path):
 		print path, "does not exist"
 
 def check_perms (item):
-	pass
+	if checked_paths[item.name] != None:
+		print item.name, oct(stat.S_IMODE(checked_paths[item.name].st_mode)), '->', oct(item.mode)
+	else:
+		print item.name, 'created', oct(item.mode)
 
 if __name__=='__main__':
 	untar_nc(*sys.argv[1:])
