@@ -27,11 +27,15 @@ def safe_extract (tarball, item):
 		metadata = None
 	path = os.path.split(item.name)[0]
 	if metadata != None:
-		pass  # record the stat change
+		record = []
+		record.append((oct(stat.S_IMODE(metadata.st_mode)), oct(item.mode)))
+		record.append((str(metadata.st_uid), str(item.uid)))
+		record.append((str(metadata.st_gid), str(item.gid)))
+		print item.name, ",".join([":".join(i) for i in record])
 		if not item.isdir():
 			ensure_writeable(path, lambda: backup_file(item.name))
 	else:
-		pass  # record the creation
+		print item.name
 	ensure_writeable(path, lambda: tarball.extract(item))
 
 def ensure_writeable (directory, action):
