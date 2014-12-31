@@ -23,9 +23,9 @@ def untar_nc (filename):
 		sys.stderr.write(str(e) + "\n")
 
 def safe_extract (tarball, item):
-	try:
+	if os.access(item.name, os.F_OK):
 		metadata = os.lstat(item.name)
-	except OSError:
+	else:
 		metadata = None
 	path = os.path.join(".", os.path.split(item.name)[0])
 	if metadata != None:
@@ -33,13 +33,6 @@ def safe_extract (tarball, item):
 		if not item.isdir():
 			ensure_writeable(path, lambda: backup_file(item.name))
 	ensure_writeable(path, lambda: tarball.extract(item))
-	'''
-	if item.isdir():
-		if metadata == None:
-			os.mkdir(item.name)
-		else:
-			os.chmod(item.name, stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
-	'''
 
 def ensure_writeable (directory, action):
 	print "ensure_writeable:", directory
@@ -57,36 +50,16 @@ def writeable_do (directory, action):
 	os.chmod(directory, orig_mode)
 
 
-def backup_file (filename):
-	path, basename = os.path.split(filename)
-	dest = os.path.join(path, "."+basename+".1")
-	shutil.copy2(filename, dest)
-
-def pre_check (contents):
-	for item in contents:
-		check_path(item.name)
-		check_perms(item)
-
-def check_path (path):
-	if checked_paths.has_key(path):
-		return
-	parts = path.rsplit('/', 1)
-	if len(parts) != 1:
-		check_path(parts[0])
-	# Test this path
-	if os.access(path, os.F_OK):  # Does path exist
-		metadata = os.lstat(path)
-		checked_paths[path] = metadata
-		print path, oct(stat.S_IMODE(metadata.st_mode))
-	else:
-		checked_paths[path] = None
-		print path, "does not exist"
-
-def check_perms (item):
-	if checked_paths[item.name] != None:
-		print item.name, oct(stat.S_IMODE(checked_paths[item.name].st_mode)), '->', oct(item.mode)
-	else:
-		print item.name, 'created', oct(item.mode)
+def backup_file (src, dest=None):
+	path, basename = os.path.split(src)
+	if dest == None:
+		dest = os.path.join(path, "." + basename + ".bak.1")
+	if os.access(dest, os.F_OK):
+		base, num = os.path.splitext(dest)
+		backup_num = int(num[1:]) + 1
+		new_dest = base + "." + str(backup_num)
+		backup_file(dest, new_dest)
+	shutil.copy2(src, dest)
 
 if __name__=='__main__':
 	untar_nc(*sys.argv[1:])
