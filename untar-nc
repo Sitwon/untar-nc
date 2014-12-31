@@ -3,6 +3,7 @@
 import bz2
 import gzip
 import os
+import shutil
 import stat
 import sys
 import tarfile
@@ -14,9 +15,52 @@ def untar_nc (filename):
 	try:
 		tarball = tarfile.open(filename)
 		contents = tarball.getmembers()
-		pre_check(contents)
+		for item in contents:
+			print "Extracting: "+item.name+" ("+str(item.size)+")", str(item.mode), item.uname, "("+str(item.uid)+")", item.gname, "("+str(item.gid)+")"
+			safe_extract(tarball, item)
+		#pre_check(contents)
 	except Exception as e:
 		sys.stderr.write(str(e) + "\n")
+
+def safe_extract (tarball, item):
+	try:
+		metadata = os.lstat(item.name)
+	except OSError:
+		metadata = None
+	path = os.path.join(".", os.path.split(item.name)[0])
+	if metadata != None:
+		print "Exists:", item.name, metadata.st_uid, metadata.st_gid, oct(stat.S_IMODE(metadata.st_mode))
+		if not item.isdir():
+			ensure_writeable(path, lambda: backup_file(item.name))
+	ensure_writeable(path, lambda: tarball.extract(item))
+	'''
+	if item.isdir():
+		if metadata == None:
+			os.mkdir(item.name)
+		else:
+			os.chmod(item.name, stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
+	'''
+
+def ensure_writeable (directory, action):
+	print "ensure_writeable:", directory
+	if os.access(directory, os.W_OK):
+		action()
+	else:
+		path = os.path.split(directory)[0]
+		orig_mode = stat.S_IMODE(os.lstat(directory).st_mode)
+		ensure_writeable (path, lambda: writeable_do(directory, action))
+
+def writeable_do (directory, action):
+	orig_mode = stat.S_IMODE(os.lstat(directory).st_mode)
+	os.chmod(directory, stat.S_IRWXU|stat.S_IRWXG|stat.S_IRWXO)
+	action()
+	os.chmod(directory, orig_mode)
+
+
+def backup_file (filename):
+	path, basename = os.path.split(filename)
+	dest = os.path.join(path, "."+basename+".1")
+	shutil.copy2(filename, dest)
 
 def pre_check (contents):
 	for item in contents:
