@@ -16,9 +16,7 @@ def untar_nc (filename):
 		tarball = tarfile.open(filename)
 		contents = tarball.getmembers()
 		for item in contents:
-			print "Extracting: "+item.name+" ("+str(item.size)+")", str(item.mode), item.uname, "("+str(item.uid)+")", item.gname, "("+str(item.gid)+")"
 			safe_extract(tarball, item)
-		#pre_check(contents)
 	except Exception as e:
 		sys.stderr.write(str(e) + "\n")
 
@@ -29,15 +27,16 @@ def safe_extract (tarball, item):
 		metadata = None
 	path = os.path.split(item.name)[0]
 	if metadata != None:
-		print "Exists:", item.name, metadata.st_uid, metadata.st_gid, oct(stat.S_IMODE(metadata.st_mode))
+		pass  # record the stat change
 		if not item.isdir():
 			ensure_writeable(path, lambda: backup_file(item.name))
+	else:
+		pass  # record the creation
 	ensure_writeable(path, lambda: tarball.extract(item))
 
 def ensure_writeable (directory, action):
 	if directory == '':
 		directory = '.'
-	print "ensure_writeable:", directory
 	if os.access(directory, os.W_OK):
 		action()
 	else:
