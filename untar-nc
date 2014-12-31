@@ -12,15 +12,19 @@ checked_paths = {}
 checked_perms = []
 
 def untar_nc (filename):
+	manifest_filename = ".untar-nc_manifest"
+	backup_file(manifest_filename)
+	manifest = open(manifest_filename, "w")
 	try:
 		tarball = tarfile.open(filename)
 		contents = tarball.getmembers()
 		for item in contents:
-			safe_extract(tarball, item)
+			safe_extract(tarball, item, manifest)
 	except Exception as e:
 		sys.stderr.write(str(e) + "\n")
+	manifest.close()
 
-def safe_extract (tarball, item):
+def safe_extract (tarball, item, manifest=sys.stdout):
 	if os.access(item.name, os.F_OK):
 		metadata = os.lstat(item.name)
 	else:
@@ -31,11 +35,13 @@ def safe_extract (tarball, item):
 		record.append((oct(stat.S_IMODE(metadata.st_mode)), oct(item.mode)))
 		record.append((str(metadata.st_uid), str(item.uid)))
 		record.append((str(metadata.st_gid), str(item.gid)))
-		print item.name, ",".join([":".join(i) for i in record])
+		manifest.write(item.name, ",".join([":".join(i) for i in record]))
+		manifest.write("\n")
 		if not item.isdir():
 			ensure_writeable(path, lambda: backup_file(item.name))
 	else:
-		print item.name
+		manifest.write(item.name)
+		manifest.write("\n")
 	ensure_writeable(path, lambda: tarball.extract(item))
 
 def ensure_writeable (directory, action):
@@ -58,6 +64,8 @@ def writeable_do (directory, action):
 
 
 def backup_file (src, dest=None):
+	if not os.access(src, os.F_OK):
+		return
 	path, basename = os.path.split(src)
 	if dest == None:
 		dest = os.path.join(path, "." + basename + ".bak.1")
