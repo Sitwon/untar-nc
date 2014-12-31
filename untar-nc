@@ -27,7 +27,7 @@ def safe_extract (tarball, item):
 		metadata = os.lstat(item.name)
 	else:
 		metadata = None
-	path = os.path.join(".", os.path.split(item.name)[0])
+	path = os.path.split(item.name)[0]
 	if metadata != None:
 		print "Exists:", item.name, metadata.st_uid, metadata.st_gid, oct(stat.S_IMODE(metadata.st_mode))
 		if not item.isdir():
@@ -35,13 +35,17 @@ def safe_extract (tarball, item):
 	ensure_writeable(path, lambda: tarball.extract(item))
 
 def ensure_writeable (directory, action):
+	if directory == '':
+		directory = '.'
 	print "ensure_writeable:", directory
 	if os.access(directory, os.W_OK):
 		action()
 	else:
 		path = os.path.split(directory)[0]
-		orig_mode = stat.S_IMODE(os.lstat(directory).st_mode)
-		ensure_writeable (path, lambda: writeable_do(directory, action))
+		if path == '':
+			writeable_do(directory, action)
+		else:
+			ensure_writeable (path, lambda: writeable_do(directory, action))
 
 def writeable_do (directory, action):
 	orig_mode = stat.S_IMODE(os.lstat(directory).st_mode)
