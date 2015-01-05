@@ -2,20 +2,44 @@
 
 import os
 import shutil
+import stat
 import sys
 
 def pop_last ():
 	manifest_filename = ".untar-nc_manifest"
 	# Read manifest and revert the changes
+	if not os.access(manifest_filename, os.R_OK):
+		sys.exit(1)
+	try:
+		manifest = open(manifest_filename)
+		revert_all(manifest)
+	finally:
+		manifest.close()
 	revert_backup(manifest_filename)
+
+def revert_all (manifest):
+	manifest_lines = manifest.readlines()
+	manifest_lines.reverse()
+	for line in manifest_lines:
+		if line[-1] == "\n":
+			line = line[:-1]
+		line_parts = line.split(",")
+		if len(line_parts) > 1 and stat.S_ISDIR(os.stat(line_parts[0]).st_mode):
+			continue
+		revert_backup(line_parts[0])
 
 def revert_backup (target, backup=None):
 	path, basename = os.path.split(target)
 	if backup == None:
 		backup = os.path.join(path, "." + basename + ".bak.1")
 	if not os.access(backup, os.F_OK):
-		return
-	shutil.move(backup, target)
+		if stat.S_ISDIR(os.stat(target).st_mode):
+			os.rmdir(target)
+			return
+		else:
+			os.remove(target)
+			return
+	shutil.copy2(backup, target)
 	base, num = os.path.splitext(backup)
 	bak_num = int(num[1:]) + 1
 	next_backup = base + "." + str(bak_num)
