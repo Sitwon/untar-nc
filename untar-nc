@@ -35,7 +35,8 @@ def safe_extract (tarball, item, manifest=sys.stdout):
 		record.append((oct(stat.S_IMODE(metadata.st_mode)), oct(item.mode)))
 		record.append((str(metadata.st_uid), str(item.uid)))
 		record.append((str(metadata.st_gid), str(item.gid)))
-		manifest.write(item.name, ",".join([":".join(i) for i in record]))
+		manifest.write(item.name + ",")
+		manifest.write(",".join([":".join(i) for i in record]))
 		manifest.write("\n")
 		if not item.isdir():
 			ensure_writeable(path, lambda: backup_file(item.name))
