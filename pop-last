@@ -27,9 +27,9 @@ def revert_all (manifest):
 			line = line[1:]
 			line_parts = line.split(",")
 			if len(line_parts) >= 4 and stat.S_ISDIR(os.stat(line_parts[0]).st_mode):
-				mode = line_parts[-3].split(":")[0]
-				uid = line_parts[-2].split(":")[0]
-				gid = line_parts[-1].split(":")[0]
+				mode = int(line_parts[-3].split(":")[0])
+				uid = int(line_parts[-2].split(":")[0])
+				gid = int(line_parts[-1].split(":")[0])
 				line = "".join(line_parts[:-3])
 				os.chmod(line, mode)
 				os.chown(line, uid, gid)
