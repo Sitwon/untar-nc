@@ -25,20 +25,22 @@ def untar_nc (filename):
 	manifest.close()
 
 def safe_extract (tarball, item, manifest=sys.stdout):
+	metadata = None
 	if os.access(item.name, os.F_OK):
 		metadata = os.lstat(item.name)
-	else:
-		metadata = None
 	path = os.path.split(item.name)[0]
 	if metadata != None:
-		record = []
-		record.append((oct(stat.S_IMODE(metadata.st_mode)), oct(item.mode)))
-		record.append((str(metadata.st_uid), str(item.uid)))
-		record.append((str(metadata.st_gid), str(item.gid)))
-		manifest.write(item.name + ",")
-		manifest.write(",".join([":".join(i) for i in record]))
-		manifest.write("\n")
-		if not item.isdir():
+		if item.isdir():
+			record = []
+			record.append((oct(stat.S_IMODE(metadata.st_mode)), oct(item.mode)))
+			record.append((str(metadata.st_uid), str(item.uid)))
+			record.append((str(metadata.st_gid), str(item.gid)))
+			manifest.write("/" + item.name + ",")
+			manifest.write(",".join([":".join(i) for i in record]))
+			manifest.write("\n")
+		else:
+			manifest.write(item.name)
+			manifest.write("\n")
 			ensure_writeable(path, lambda: backup_file(item.name))
 	else:
 		manifest.write(item.name)

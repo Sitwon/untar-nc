@@ -23,10 +23,13 @@ def revert_all (manifest):
 	for line in manifest_lines:
 		if line[-1] == "\n":
 			line = line[:-1]
-		line_parts = line.split(",")
-		if len(line_parts) > 1 and stat.S_ISDIR(os.stat(line_parts[0]).st_mode):
-			continue
-		revert_backup(line_parts[0])
+		if line[0] == "/":
+			line = line[1:]
+			line_parts = line.split(",")
+			if len(line_parts) > 1 and stat.S_ISDIR(os.stat(line_parts[0]).st_mode):
+				# revert the metadata
+				continue
+		revert_backup(line)
 
 def revert_backup (target, backup=None):
 	path, basename = os.path.split(target)
