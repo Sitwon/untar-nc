@@ -5,8 +5,7 @@ import shutil
 import stat
 import sys
 
-def pop_last ():
-	manifest_filename = ".untar-nc_manifest"
+def pop_last (manifest_filename = ".untar-nc_manifest"):
 	# Read manifest and revert the changes
 	if not os.access(manifest_filename, os.R_OK):
 		sys.exit(1)

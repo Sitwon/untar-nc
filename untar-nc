@@ -11,8 +11,7 @@ import tarfile
 checked_paths = {}
 checked_perms = []
 
-def untar_nc (filename):
-	manifest_filename = ".untar-nc_manifest"
+def untar_nc (filename, manifest_filename=".untar-nc_manifest"):
 	backup_file(manifest_filename)
 	manifest = open(manifest_filename, "w")
 	try:
