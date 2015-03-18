@@ -30,15 +30,15 @@ def revert_backup (target, backup=None):
 	path, basename = os.path.split(target)
 	if backup == None:
 		backup = os.path.join(path, "." + basename + ".bak.1")
-	if os.access(target, os.F_OK):
-		if not os.access(backup, os.F_OK):
-			if stat.S_ISDIR(os.stat(target).st_mode):
-				os.rmdir(target)
-				return
-			else:
-				os.remove(target)
-				return
-		os.rename(backup, target)
+	if not os.access(backup, os.F_OK):
+		if stat.S_ISDIR(os.stat(target).st_mode):
+			os.rmdir(target)
+			return
+		else:
+			os.remove(target)
+			return
+	os.rename(backup, target)
+	shutil.copy2(target, backup)
 	base, num = os.path.splitext(backup)
 	bak_num = int(num[1:]) + 1
 	next_backup = base + "." + str(bak_num)
