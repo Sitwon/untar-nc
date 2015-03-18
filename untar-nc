@@ -67,7 +67,8 @@ def backup_file (src, dest=None):
 		backup_num = int(num[1:]) + 1
 		new_dest = base + "." + str(backup_num)
 		backup_file(dest, new_dest)
-	shutil.copy2(src, dest)
+	os.rename(src, dest)
+	shutil.copy2(dest, src)
 
 if __name__=='__main__':
 	untar_nc(*sys.argv[1:])
